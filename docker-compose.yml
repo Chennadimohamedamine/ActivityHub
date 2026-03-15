@@ -1,0 +1,55 @@
+
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6381:6379"
+
+  backend:
+    build: ./backend
+    container_name: nest-backend
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+      - "3002:3002"
+
+  frontend:
+    build: ./frontend
+    container_name: react-frontend
+    depends_on:
+      - backend
+    ports:
+      - "443:443"
+
+  prometheus:
+    build: ./monitoring
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    ports:
+      - "3100:3000"
+    depends_on:
+      - prometheus
+
+
